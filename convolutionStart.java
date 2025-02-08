@@ -1,8 +1,3 @@
-// CMPT 450
-// Winter, 2023
-// Starting point for Assignments
-//
-// Instructor: Michael Janzen
 
 import java.awt.*;
 import java.awt.event.*;
