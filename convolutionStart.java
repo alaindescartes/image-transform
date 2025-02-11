@@ -454,23 +454,76 @@ public class convolutionStart extends JComponent implements KeyListener
 		applyKernel(3, gaussian7x7);
 	}
 
+
+	// This method applies edge detection to an image using either a 3x3 Sobel kernel or a 7x7 extended Sobel kernel.
+	// It calculates gradients in the x (horizontal) and y (vertical) directions and combines them to find the edge magnitude.
 	public void detectEdges() {
-		int[][] sobelHorizontal = {
-				{-1, -2, -1},
-				{ 0,  0,  0},
-				{ 1,  2,  1}
+		int[][] filterx = {
+				{ -1,  0, +1 },
+				{ -2,  0, +2 },
+				{ -1,  0, +1 }
+		};
+		int[][] filterY = {
+				{ -1, -2, -1 },
+				{  0,  0,  0 },
+				{ +1, +2, +1 }
 		};
 
-		int[][] prewittVertical = {
-				{-1,  0,  1},
-				{-1,  0,  1},
-				{-1,  0,  1}
-		};
+//		int[][] filterx = {
+//				{ -1,   -4,   -5,    0,   +5,   +4,   +1 },
+//				{ -6,  -24,  -30,    0,  +30,  +24,   +6 },
+//				{ -15, -60,  -75,    0,  +75,  +60,  +15 },
+//				{ -20, -80, -100,    0, +100,  +80,  +20 },
+//				{ -15, -60,  -75,    0,  +75,  +60,  +15 },
+//				{ -6,  -24,  -30,    0,  +30,  +24,   +6 },
+//				{ -1,   -4,   -5,    0,   +5,   +4,   +1 }
+//		};
+//
+//		int[][] filterY = {
+//				{ -1,   -6,   -15,  -20,  -15,   -6,   -1 },
+//				{ -4,  -24,   -60,  -80,  -60,  -24,   -4 },
+//				{ -5,  -30,   -75, -100,  -75,  -30,   -5 },
+//				{  0,    0,     0,    0,    0,    0,    0 },
+//				{ +5,  +30,   +75, +100,  +75,  +30,   +5 },
+//				{ +4,  +24,   +60,  +80,  +60,  +24,   +4 },
+//				{ +1,   +6,   +15,  +20,  +15,   +6,   +1 }
+//		};
 
-		applyKernel(1, prewittVertical);
 
-		//applyKernel(1, sobelHorizontal, true);
+
+		int width = image.getWidth();
+		int height = image.getHeight();
+		int[][] temp = new int[height][width];
+		int offset = 1;  // for a 3x3 kernel
+		//int offset = 3;  // for a 7x7 kernel
+
+		for (int y = offset; y < height - offset; y++) {
+			for (int x = offset; x < width - offset; x++) {
+
+				int gX = 0, gY = 0;
+				for (int dy = -offset; dy <= offset; dy++) {
+					for (int dx = -offset; dx <= offset; dx++) {
+						int neighborPixel = getGrayScale(x + dx, y + dy);
+
+						gX += neighborPixel * filterx[dy + offset][dx + offset];
+						gY += neighborPixel * filterY[dy + offset][dx + offset];
+					}
+				}
+
+				int magnitude = (int) Math.sqrt(gX * gX + gY * gY);
+				magnitude = Math.min(255, Math.max(0, magnitude));
+				temp[y][x] = (magnitude > 80) ? 0xFFFFFFFF : 0xFF000000;
+			}
+		}
+		for (int y = offset; y < height - offset; y++) {
+			for (int x = offset; x < width - offset; x++) {
+				image.setRGB(x, y, temp[y][x]);
+			}
+		}
+		repaint();
 	}
+
+
 
 	// This method applies a custom kernel to an image, allowing for effects like smoothing, blurring, sharpening, etc.
 	// The kernel size and weights are determined by the passed 2D filter array.
