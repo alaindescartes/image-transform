@@ -430,6 +430,48 @@ public class convolutionStart extends JComponent implements KeyListener
 	}
 
 
+	// This method applies a Gaussian blur to the image, providing a smoothing effect.
+	// It uses either a 3x3 Gaussian filter for light blurring or a 7x7 Gaussian filter for stronger blurring.
+	// Currently, it applies the 7x7 filter. Uncomment the 3x3 filter line to switch.
+	public void blurImage() {
+		int[][] gaussian3x3 = {
+				{1, 2, 1},
+				{2, 4, 2},
+				{1, 2, 1}
+		};
+
+		int[][] gaussian7x7 = {
+				{1, 1, 2, 2, 2, 1, 1},
+				{1, 2, 2, 4, 2, 2, 1},
+				{2, 2, 4, 8, 4, 2, 2},
+				{2, 4, 8, 16, 8, 4, 2},
+				{2, 2, 4, 8, 4, 2, 2},
+				{1, 2, 2, 4, 2, 2, 1},
+				{1, 1, 2, 2, 2, 1, 1}
+		};
+
+		//applyKernel(1, gaussian3x3);
+		applyKernel(3, gaussian7x7);
+	}
+
+	public void detectEdges() {
+		int[][] sobelHorizontal = {
+				{-1, -2, -1},
+				{ 0,  0,  0},
+				{ 1,  2,  1}
+		};
+
+		int[][] prewittVertical = {
+				{-1,  0,  1},
+				{-1,  0,  1},
+				{-1,  0,  1}
+		};
+
+		applyKernel(1, prewittVertical);
+
+		//applyKernel(1, sobelHorizontal, true);
+	}
+
 	// This method applies a custom kernel to an image, allowing for effects like smoothing, blurring, sharpening, etc.
 	// The kernel size and weights are determined by the passed 2D filter array.
 	//the offset defines how far the kernel extends form the center pixel
@@ -462,9 +504,15 @@ public class convolutionStart extends JComponent implements KeyListener
 
 					}
 				}
-				int avgRed = Math.min(255, Math.max(0, sumRed / totalWeight));
-				int avgGreen = Math.min(255, Math.max(0, sumGreen / totalWeight));
-				int avgBlue = Math.min(255, Math.max(0, sumBlue / totalWeight));
+
+				int avgRed, avgGreen, avgBlue;
+
+
+				     avgRed = Math.min(255, Math.max(0, sumRed / totalWeight));
+					 avgGreen = Math.min(255, Math.max(0, sumGreen / totalWeight));
+					 avgBlue = Math.min(255, Math.max(0, sumBlue / totalWeight));
+
+
 
 				int newPixel = (avgRed << 16) | (avgGreen << 8) | avgBlue;
 				image.setRGB(i, j, newPixel);
@@ -499,6 +547,8 @@ public class convolutionStart extends JComponent implements KeyListener
 		else if (e.getKeyChar() == 'b') brightenImage(0.5);
 		else if (e.getKeyChar() == 'd') brightenImage(1.6);
 		else if (e.getKeyChar() == 'S' ||e.getKeyChar() == 's') smoothImage();
+		else if (e.getKeyChar() == 'F' ||e.getKeyChar() == 'f') blurImage();
+		else if (e.getKeyChar() == 'E' ||e.getKeyChar() == 'e') detectEdges();
 
 	}
 
