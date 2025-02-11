@@ -388,6 +388,7 @@ public class convolutionStart extends JComponent implements KeyListener
 		repaint();
 	}
 
+	//this function brightens an image by using gamma correction
 	public void brightenImage(double gamma){
 		final double brightGamma = 0.5;
 		final double darkGamma = 1.6;
@@ -405,6 +406,33 @@ public class convolutionStart extends JComponent implements KeyListener
 		repaint();
 	}
 
+	// This function applies a box filter (mean filter) to an image, producing a smoothing effect.
+	// The filter can be a 3x3 for light smoothing or a 7x7 for stronger smoothing.
+	// Currently, it applies the 7x7 filter. Uncomment the 3x3 filter line to switch.
+	public void smoothImage() {
+		int[][] filter1 = {
+				{1, 1, 1},
+				{1, 1, 1},
+				{1, 1, 1}
+		};
+		int[][] filter2 = {
+				{1, 1, 1, 1, 1, 1, 1},
+				{1, 1, 1, 1, 1, 1, 1},
+				{1, 1, 1, 1, 1, 1, 1},
+				{1, 1, 1, 1, 1, 1, 1},
+				{1, 1, 1, 1, 1, 1, 1},
+				{1, 1, 1, 1, 1, 1, 1},
+				{1, 1, 1, 1, 1, 1, 1}
+		};
+
+		applyKernel(3, filter2);
+		//applyKernel(1, filter1);
+	}
+
+
+	// This method applies a custom kernel to an image, allowing for effects like smoothing, blurring, sharpening, etc.
+	// The kernel size and weights are determined by the passed 2D filter array.
+	//the offset defines how far the kernel extends form the center pixel
 	public void applyKernel(int offset, int[][] filter) {
 		int totalWeight = 0;
 
@@ -442,6 +470,7 @@ public class convolutionStart extends JComponent implements KeyListener
 				image.setRGB(i, j, newPixel);
 			}
 		}
+		repaint();
 	}
 
 
@@ -469,6 +498,7 @@ public class convolutionStart extends JComponent implements KeyListener
 		else if (e.getKeyChar() >= ')' && e.getKeyChar() <= '*') dilation(e.getKeyChar() - ')');
 		else if (e.getKeyChar() == 'b') brightenImage(0.5);
 		else if (e.getKeyChar() == 'd') brightenImage(1.6);
+		else if (e.getKeyChar() == 'S' ||e.getKeyChar() == 's') smoothImage();
 
 	}
 
