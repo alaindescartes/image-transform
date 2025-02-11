@@ -405,8 +405,15 @@ public class convolutionStart extends JComponent implements KeyListener
 		repaint();
 	}
 
-	public void applyKernel(int offset, int filterSize) {
-		int totalSize = filterSize * filterSize;
+	public void applyKernel(int offset, int[][] filter) {
+		int totalWeight = 0;
+
+        for (int[] ints : filter) {
+            for (int y = 0; y < filter.length; y++) {
+                totalWeight += ints[y];
+            }
+        }
+		if (totalWeight == 0) totalWeight = 1;
 		for(int j=offset; j<image.getHeight() - offset; j++)
 		{
 			for(int i=offset; i<image.getWidth() - offset; i++)
@@ -420,15 +427,16 @@ public class convolutionStart extends JComponent implements KeyListener
 						int greenColor = (neighborPixel >> 8) & 0xFF;
 						int blueColor = neighborPixel & 0xFF;
 
-						sumRed += redColor;
-						sumGreen += greenColor;
-						sumBlue += blueColor;
+						int weight = filter[row + offset][col + offset];
+						sumRed += redColor * weight;
+						sumGreen += greenColor * weight;
+						sumBlue += blueColor * weight;
 
 					}
 				}
-				int avgRed = sumRed / totalSize;
-				int avgGreen =  sumGreen / totalSize;
-				int avgBlue = sumBlue / totalSize;
+				int avgRed = Math.min(255, Math.max(0, sumRed / totalWeight));
+				int avgGreen = Math.min(255, Math.max(0, sumGreen / totalWeight));
+				int avgBlue = Math.min(255, Math.max(0, sumBlue / totalWeight));
 
 				int newPixel = (avgRed << 16) | (avgGreen << 8) | avgBlue;
 				image.setRGB(i, j, newPixel);
