@@ -405,6 +405,37 @@ public class convolutionStart extends JComponent implements KeyListener
 		repaint();
 	}
 
+	public void applyKernel(int offset, int filterSize) {
+		int totalSize = filterSize * filterSize;
+		for(int j=offset; j<image.getHeight() - offset; j++)
+		{
+			for(int i=offset; i<image.getWidth() - offset; i++)
+			{
+				int sumRed = 0, sumGreen = 0, sumBlue = 0;
+
+				for (int col = -offset; col <= offset; col++) {
+					for (int row = -offset; row <= offset; row++) {
+						int neighborPixel = image.getRGB(i + row, j + col);
+						int redColor = (neighborPixel >> 16) & 0xFF;
+						int greenColor = (neighborPixel >> 8) & 0xFF;
+						int blueColor = neighborPixel & 0xFF;
+
+						sumRed += redColor;
+						sumGreen += greenColor;
+						sumBlue += blueColor;
+
+					}
+				}
+				int avgRed = sumRed / totalSize;
+				int avgGreen =  sumGreen / totalSize;
+				int avgBlue = sumBlue / totalSize;
+
+				int newPixel = (avgRed << 16) | (avgGreen << 8) | avgBlue;
+				image.setRGB(i, j, newPixel);
+			}
+		}
+	}
+
 
 	// These function definitions must be included to satisfy the KeyListener interface 
 	public void keyPressed(KeyEvent e) {}
