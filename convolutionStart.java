@@ -551,6 +551,53 @@ public class convolutionStart extends JComponent implements KeyListener
 	}
 
 
+	// This method sharpens the image by applying a Gaussian blur to create a blurred version,
+	// then subtracting a scaled version of the blurred image from the original image.
+	public void sharpenImage() {
+		int offset = 1;
+		BufferedImage temp = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		copyImage(image, temp);
+//		int[][] gaussian = {
+//				{1, 2, 1},
+//				{2, 4, 2},
+//				{1, 2, 1}
+//		};
+
+		int[][] gaussian = {
+				{1, 1, 2, 2, 2, 1, 1},
+				{1, 2, 2, 4, 2, 2, 1},
+				{2, 2, 4, 8, 4, 2, 2},
+				{2, 4, 8, 16, 8, 4, 2},
+				{2, 2, 4, 8, 4, 2, 2},
+				{1, 2, 2, 4, 2, 2, 1},
+				{1, 1, 2, 2, 2, 1, 1}
+		};
+
+		var blurredImage = applyKernel(offset, gaussian, temp);
+		for(int j=0; j<image.getHeight(); j++)
+		{
+			for(int i=0; i<image.getWidth(); i++)
+			{
+				int originalPixel = image.getRGB(i, j);
+				int blurredPixel = blurredImage.getRGB(i, j);
+
+				int newRed = (int) (1.6 * getRed(originalPixel) - 0.6 * getRed(blurredPixel));
+				int newGreen = (int) (1.6 * getGreen(originalPixel) - 0.6 * getGreen(blurredPixel));
+				int newBlue = (int) (1.6 * getBlue(originalPixel) - 0.6 * getBlue(blurredPixel));
+
+				// Clamp values to [0, 255] to prevent overflow or underflow
+				newRed = Math.min(255, Math.max(0, newRed));
+				newGreen = Math.min(255, Math.max(0, newGreen));
+				newBlue = Math.min(255, Math.max(0, newBlue));
+				int newPixel = (newRed << 16) | (newGreen << 8) | newBlue;
+				image.setRGB(i, j, newPixel);
+
+			}
+		}
+		repaint();
+	}
+
+
 	// This method applies a custom kernel to an image, allowing for effects like smoothing, blurring, sharpening, etc.
 	// The kernel size and weights are determined by the passed 2D filter array.
 	//the offset defines how far the kernel extends form the center pixel
@@ -599,6 +646,51 @@ public class convolutionStart extends JComponent implements KeyListener
 		}
 		repaint();
 	}
+	// This method applies a custom kernel to an image, allowing for effects like smoothing, blurring, sharpening, etc.
+	// The kernel size and weights are determined by the passed 2D filter array.
+	//the offset defines how far the kernel extends form the center pixel
+	public BufferedImage applyKernel(int offset, int[][] filter, BufferedImage imageCopy) {
+		int totalWeight = 0;
+
+		for (int[] ints : filter) {
+			for (int y = 0; y < filter.length; y++) {
+				totalWeight += ints[y];
+			}
+		}
+		if (totalWeight == 0) totalWeight = 1;
+		for(int j=offset; j<imageCopy.getHeight() - offset; j++)
+		{
+			for(int i=offset; i<imageCopy.getWidth() - offset; i++)
+			{
+				int sumRed = 0, sumGreen = 0, sumBlue = 0;
+
+				for (int col = -offset; col <= offset; col++) {
+					for (int row = -offset; row <= offset; row++) {
+						int neighborPixel = image.getRGB(i + row, j + col);
+						int redColor = (neighborPixel >> 16) & 0xFF;
+						int greenColor = (neighborPixel >> 8) & 0xFF;
+						int blueColor = neighborPixel & 0xFF;
+
+						int weight = filter[row + offset][col + offset];
+						sumRed += redColor * weight;
+						sumGreen += greenColor * weight;
+						sumBlue += blueColor * weight;
+					}
+				}
+
+				int avgRed, avgGreen, avgBlue;
+
+				avgRed = Math.min(255, Math.max(0, sumRed / totalWeight));
+				avgGreen = Math.min(255, Math.max(0, sumGreen / totalWeight));
+				avgBlue = Math.min(255, Math.max(0, sumBlue / totalWeight));
+
+				int newPixel = (avgRed << 16) | (avgGreen << 8) | avgBlue;
+				imageCopy.setRGB(i, j, newPixel);
+			}
+		}
+		repaint();
+		return imageCopy;
+	}
 
 
 	// These function definitions must be included to satisfy the KeyListener interface 
@@ -628,6 +720,7 @@ public class convolutionStart extends JComponent implements KeyListener
 		else if (e.getKeyChar() == 'S' ||e.getKeyChar() == 's') smoothImage();
 		else if (e.getKeyChar() == 'F' ||e.getKeyChar() == 'f') blurImage();
 		else if (e.getKeyChar() == 'E' ||e.getKeyChar() == 'e') detectEdges();
+		else if (e.getKeyChar() == 'Z' ||e.getKeyChar() == 'z') sharpenImage();
 		else if (e.getKeyChar() == 'm' ) applyMedianFilter();
 
 	}
