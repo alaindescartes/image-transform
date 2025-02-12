@@ -523,6 +523,32 @@ public class convolutionStart extends JComponent implements KeyListener
 		repaint();
 	}
 
+	// This method applies a 3x3 median filter to the image to reduce noise.
+	//It works by replacing each pixel's intensity with the median intensity of its 3x3 neighborhood.
+	public void applyMedianFilter() {
+		int offset = 1;
+		int width = image.getWidth();
+		int height = image.getHeight();
+		for (int y = offset; y < height - offset; y++) {
+			for (int x = offset; x < width - offset; x++) {
+
+				int [][] temp = new int[3][3];
+				for (int dy = -offset; dy <= offset; dy++) {
+					for (int dx = -offset; dx <= offset; dx++) {
+						temp[dy + offset][dx + offset] = getGrayScale(x + dx, y + dy);
+
+					}
+				}
+				int[] flattenedArray = Arrays.stream(temp)
+						.flatMapToInt(Arrays::stream)
+						.sorted()
+						.toArray();
+				int median = flattenedArray[4];
+				image.setRGB(x, y, (median << 16) | (median << 8) | median);
+			}
+		}
+		repaint();
+	}
 
 
 	// This method applies a custom kernel to an image, allowing for effects like smoothing, blurring, sharpening, etc.
@@ -602,6 +628,7 @@ public class convolutionStart extends JComponent implements KeyListener
 		else if (e.getKeyChar() == 'S' ||e.getKeyChar() == 's') smoothImage();
 		else if (e.getKeyChar() == 'F' ||e.getKeyChar() == 'f') blurImage();
 		else if (e.getKeyChar() == 'E' ||e.getKeyChar() == 'e') detectEdges();
+		else if (e.getKeyChar() == 'm' ) applyMedianFilter();
 
 	}
 
